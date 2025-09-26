@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>汉字声调练习游戏（完整版）</title>
+  <style>
+    :root{
+      --c1:#FF6F61; /* 鲜艳红 */
+      --c2:#FFB74D; /* 橙色 */
+      --c3:#4DB6AC; /* 绿色 */
+      --c4:#64B5F6; /* 蓝色 */
+      --c5:#BA68C8; /* 紫色 */
+      --bg1:#FFF3E0;
+      --bg2:#E1F5FE;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:"Comic Sans MS","Helvetica Neue",Arial,"PingFang SC",sans-serif;
+      background:linear-gradient(135deg,var(--bg1),var(--bg2),#F3E5F5);
+      min-height:100vh;
+      display:flex;align-items:center;justify-content:center;padding:20px;
+    }
+    .wrap{
+      width:100%;max-width:980px;background:#fff;border-radius:18px;
+      padding:18px;box-shadow:0 12px 40px rgba(0,0,0,0.12);
+    }
+    header{display:flex;align-items:center;gap:12px}
+    .logo{width:84px;height:84px;border-radius:18px;
+      background:conic-gradient(from 45deg,var(--c1),var(--c2),var(--c3),var(--c4),var(--c5),var(--c1));
+      display:flex;align-items:center;justify-content:center;color:#fff;font-size:40px;font-weight:900;box-shadow:0 8px 26px rgba(0,0,0,0.18)}
+    h1{margin:0;font-size:24px;color:var(--c1)}
+    main{margin-top:14px}
+
+    /* 首页 */
+    #home{display:block}
+    .card{background:#fff;border-radius:14px;padding:14px;box-shadow:0 8px 22px rgba(0,0,0,0.06);margin-bottom:14px}
+    .grade-selects{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px}
+    .grade-btn{flex:1;min-width:120px;padding:14px;border-radius:12px;font-weight:900;
+      background:linear-gradient(135deg,var(--c2),var(--c1));color:#fff;text-align:center;cursor:pointer;transition:.15s}
+    .grade-btn.selected{outline:5px solid rgba(100,181,246,0.3);transform:translateY(-4px)}
+    .num-select{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}
+    .num-btn{padding:10px 14px;border-radius:12px;font-weight:800;cursor:pointer;background:linear-gradient(135deg,var(--c3),var(--c4));color:#fff}
+    .num-btn.selected{outline:4px solid rgba(186,104,200,0.25);transform:scale(1.03)}
+    .custom-box{display:flex;align-items:center;gap:8px;margin-top:10px}
+    .custom-input{width:90px;padding:8px;border:3px solid var(--c4);border-radius:10px;text-align:center;font-weight:700}
+    .start-btn{background:linear-gradient(90deg,var(--c1),var(--c2));border:none;color:#fff;
+      padding:14px 20px;border-radius:14px;font-weight:900;font-size:16px;cursor:pointer;
+      box-shadow:0 8px 28px rgba(0,0,0,0.18);margin-top:14px}
+
+    /* 游戏界面 */
+    #game{display:none}
+    .topbar{display:flex;justify-content:space-between;align-items:center}
+    .char-box{text-align:center;margin:14px 0}
+    .char-box .han{font-size:110px;font-weight:900;color:var(--c1)}
+    .meta{font-size:16px;margin-top:6px;color:#333}
+    .play-btn{margin-top:8px;padding:8px 14px;border:none;border-radius:12px;
+      background:linear-gradient(90deg,var(--c3),var(--c4));color:#fff;font-weight:800;cursor:pointer}
+    .choices{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:12px}
+    .choice{padding:16px;border-radius:14px;font-weight:900;font-size:22px;cursor:pointer;
+      background:linear-gradient(135deg,#FFFDE7,#FFF9C4);border:3px solid rgba(0,0,0,0.03);transition:.12s}
+    .choice:hover{transform:translateY(-4px)}
+    .choice.correct{background:linear-gradient(135deg,#DCEDC8,#A5D6A7);border-color:#43A047;color:#1B5E20}
+    .choice.wrong{background:linear-gradient(135deg,#FFCDD2,#EF9A9A);border-color:#E53935;color:#B71C1C}
+    .progress{height:14px;background:#eee;border-radius:8px;overflow:hidden;margin-top:12px}
+    .progress>div{height:100%;width:0%;background:linear-gradient(90deg,var(--c2),var(--c1))}
+    .next-btn{background:linear-gradient(90deg,var(--c4),var(--c5));border:none;color:#fff;padding:10px 16px;
+      border-radius:12px;font-weight:900;margin-top:12px;cursor:pointer}
+    .home-btn{background:#fff;border:2px dashed var(--c4);padding:8px 12px;border-radius:12px;cursor:pointer;margin-top:12px}
+
+    /* 录音行 */
+    .rec-row{display:flex;gap:8px;align-items:center;justify-content:center;margin-top:10px}
+    .rec-btn{padding:8px 12px;border-radius:10px;border:none;font-weight:800;cursor:pointer}
+    .rec-indicator{font-size:13px;color:#666;margin-left:6px}
+
+    /* 结束页 */
+    #end{display:none;text-align:center}
+    .end-card{padding:20px;border-radius:16px;background:linear-gradient(135deg,#FFF3E0,#FFE0B2)}
+    .score-big{font-size:36px;font-weight:900;color:var(--c1);margin:10px 0}
+    .tone-grid{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:12px}
+    .tone-item{padding:10px 14px;border-radius:12px;font-weight:800;background:linear-gradient(135deg,var(--c3),var(--c4));color:#fff}
+    .encourage{margin-top:12px;font-size:18px;font-weight:900;color:var(--c5)}
+
+    footer{margin-top:16px;text-align:center;color:#999;font-weight:700}
+
+    @media (max-width:760px){
+      .char-box .han{font-size:76px}
+      .choices{grid-template-columns:1fr}
+    }
+    img.stroke-gif{max-width:180px;max-height:180px;display:block;margin:8px auto}
+  </style>
+</head>
+<body>
+  <div class="wrap" role="application" aria-label="汉字声调练习">
+    <header>
+      <div class="logo">声</div>
+      <h1>汉字声调练习</h1>
+    </header>
+
+    <main>
+      <!-- HOME -->
+      <section id="home">
+        <div class="card">
+          <div style="font-weight:900">请选择年级</div>
+          <div class="grade-selects" id="grade-selects">
+            <div class="grade-btn" data-grade="1">一年级<br><span style="font-size:13px;opacity:.9">47 字</span></div>
+            <div class="grade-btn" data-grade="2">二年级<br><span style="font-size:13px;opacity:.9">62 字</span></div>
+            <div class="grade-btn" data-grade="3">三年级<br><span style="font-size:13px;opacity:.9">79 字</span></div>
+            <div class="grade-btn" data-grade="4">四年级<br><span style="font-size:13px;opacity:.9">85 字</span></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div style="font-weight:900">题目数量</div>
+          <div class="num-select" id="num-select">
+            <div class="num-btn" data-num="10">10</div>
+            <div class="num-btn" data-num="20">20</div>
+            <div class="num-btn selected" data-num="all">全部</div>
+          </div>
+          <div class="custom-box">
+            <label for="custom-num" style="font-weight:800">自定义：</label>
+            <input id="custom-num" class="custom-input" type="number" min="1" placeholder="数量">
+            <div style="font-size:13px;color:#666">（超过最大值会自动取最大）</div>
+          </div>
+        </div>
+
+        <button id="start-game" class="start-btn">开始练习 ✨</button>
+      </section>
+
+      <!-- GAME -->
+      <section id="game" aria-live="polite">
+        <div class="topbar">
+          <div id="game-grade" style="font-weight:900">年级 -</div>
+          <div id="q-count" style="font-weight:900">0 / 0</div>
+        </div>
+
+        <div class="char-box">
+          <div id="gif-container">
+            <img id="stroke-gif" class="stroke-gif" alt="" title="">
+          </div>
+          <div class="meta" id="meta-line">（释义）</div>
+          <div style="margin-top:6px">
+            <button id="play-sound" class="play-btn">🔊 播放题干音</button>
+          </div>
+
+          <!-- 录音控件行 -->
+          <div class="rec-row">
+            <button id="rec-btn" class="rec-btn" style="background:linear-gradient(90deg,var(--c1),var(--c2));color:#fff">录音 ●</button>
+            <button id="stop-rec-btn" class="rec-btn" style="background:linear-gradient(90deg,var(--c3),var(--c4));color:#fff;display:none">停止</button>
+            <button id="play-rec-btn" class="rec-btn" style="background:linear-gradient(90deg,var(--c4),var(--c5));color:#fff;display:none">▶ 播放录音</button>
+            <span id="rec-status" class="rec-indicator">（未录音）</span>
+            <!-- 录音播放元素会在右侧显示 -->
+            <audio id="user-rec-audio" controls style="display:none;margin-left:8px"></audio>
+          </div>
+        </div>
+
+        <div class="choices" id="choices"></div>
+
+        <div class="progress"><div id="progress-bar"></div></div>
+        <div id="score-text" style="margin-top:10px;font-weight:900">得分：0</div>
+
+        <div style="display:flex;gap:10px;margin-top:12px">
+          <button id="next-btn" class="next-btn" style="display:none">下一题 ➡</button>
+          <button id="quit-btn" class="home-btn">结束并返回</button>
+        </div>
+      </section>
+
+      <!-- END -->
+      <section id="end">
+        <div class="end-card">
+          <div style="font-weight:900">本轮完成 🎉</div>
+          <div class="score-big" id="final-score">0 / 0</div>
+          <div style="font-weight:800">各声调正确率：</div>
+          <div class="tone-grid" id="tone-grid"></div>
+          <div class="encourage" id="encourage"></div>
+          <div style="margin-top:12px;display:flex;gap:10px;justify-content:center">
+            <button id="retry-btn" class="start-btn">再来一次 🔁</button>
+            <button id="back-home-btn" class="home-btn">返回首页 🏠</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>快乐学汉字 🎈</footer>
+  </div>
+
+  <audio id="audio" preload="auto" style="display:none"></audio>
+
+  <script>
+    /*************************************************************************
+     * 数据与映射
+     *************************************************************************/
+
+    const gradeChars = {
+      1: ["一","二","三","四","五","六","七","八","九","十","上","下","大","小","不","坐","在","里","山","水","火","人","马","牛","羊","鸟","虫","男","女","雨","土","月","天","日","生","今","是","明","昨","走","去","来","田","星","期","几","年"],
+      2: ["我","你","好","们","可","以","朋","友","的","哪","这","吗","要","面","他","她","玩","跟","喜","欢","吃","很","什","么","课","看","书","老","师","为","有","没","外","因","雪","说","给","妈","爸","后","前","对","学","校","家","到","回","放","怎","谁","会","也","帮","能","每","岁","时","候","快","乐","高","兴"],
+      3: ["姐","妹","长","爱","想","样","都","哥","弟","太","两","和","出","进","叫","再","见","国","中","起","美","写","用","多","谢","点","东","西","少","边","就","如","还","果","所","那","地","方","夏","热","阳","比","假","做","过","得","送","住","饭","自","己","奶","爷","房","加","冷","秋","等","于","喝","知","道","早","午","晚","着","累","睡","觉","床","画","红","白","云","把","拿","又","色","心"],
+      4: ["买","钱","百","数","块","找","真","现","请","问","从","远","近","旁","公","园","只","行","车","飞","机","跑","慢","更","最","球","打","次","分","当","非","常","冬","第","民","收","衣","服","河","狗","助","网","它","春","节","包","孩","新","门","口","穿","举","听","话","忘","记","答","教","级","手","店","开","关","选","别","些","先","然","笑","哭","怕","黑","但","图","变","成","应","该","洗","头","才","动","让","完","刚"]
+    };
+
+    // pinyinMap 支持多音字（tone 可以为数字或数组）
+    const pinyinMap = {
+      /* Grade1 */
+      "一":{pinyinBase:"yi",tone:1},"二":{pinyinBase:"er",tone:4},"三":{pinyinBase:"san",tone:1},"四":{pinyinBase:"si",tone:4},"五":{pinyinBase:"wu",tone:3},
+      "六":{pinyinBase:"liu",tone:4},"七":{pinyinBase:"qi",tone:1},"八":{pinyinBase:"ba",tone:1},"九":{pinyinBase:"jiu",tone:3},"十":{pinyinBase:"shi",tone:2},
+      "上":{pinyinBase:"shang",tone:4},"下":{pinyinBase:"xia",tone:4},"大":{pinyinBase:"da",tone:4},"小":{pinyinBase:"xiao",tone:3},"不":{pinyinBase:"bu",tone:4},
+      "坐":{pinyinBase:"zuo",tone:4},"在":{pinyinBase:"zai",tone:4},"里":{pinyinBase:"li",tone:3},"山":{pinyinBase:"shan",tone:1},"水":{pinyinBase:"shui",tone:3},
+      "火":{pinyinBase:"huo",tone:3},"人":{pinyinBase:"ren",tone:2},"马":{pinyinBase:"ma",tone:3},"牛":{pinyinBase:"niu",tone:2},"羊":{pinyinBase:"yang",tone:2},
+      "鸟":{pinyinBase:"niao",tone:3},"虫":{pinyinBase:"chong",tone:2},"男":{pinyinBase:"nan",tone:2},"女":{pinyinBase:"nv",tone:3},"雨":{pinyinBase:"yu",tone:3},
+      "土":{pinyinBase:"tu",tone:3},"月":{pinyinBase:"yue",tone:4},"天":{pinyinBase:"tian",tone:1},"日":{pinyinBase:"ri",tone:4},"生":{pinyinBase:"sheng",tone:1},
+      "今":{pinyinBase:"jin",tone:1},"是":{pinyinBase:"shi",tone:4},"明":{pinyinBase:"ming",tone:2},"昨":{pinyinBase:"zuo",tone:2},"走":{pinyinBase:"zou",tone:3},
+      "去":{pinyinBase:"qu",tone:4},"来":{pinyinBase:"lai",tone:2},"田":{pinyinBase:"tian",tone:2},"星":{pinyinBase:"xing",tone:1},"期":{pinyinBase:"qi",tone:1},
+      "几":{pinyinBase:"ji",tone:3},"年":{pinyinBase:"nian",tone:2},
+
+      /* Grade 2 */
+      "我":{pinyinBase:"wo",tone:3},"你":{pinyinBase:"ni",tone:3},"好":{pinyinBase:"hao",tone:[3,4]},"们":{pinyinBase:"men",tone:0},"可":{pinyinBase:"ke",tone:3},
+      "以":{pinyinBase:"yi",tone:3},"朋":{pinyinBase:"peng",tone:2},"友":{pinyinBase:"you",tone:3},"的":{pinyinBase:"de",tone:0},"哪":{pinyinBase:"na",tone:3},
+      "这":{pinyinBase:"zhe",tone:4},"吗":{pinyinBase:"ma",tone:0},"要":{pinyinBase:"yao",tone:4},"面":{pinyinBase:"mian",tone:4},"他":{pinyinBase:"ta",tone:1},
+      "她":{pinyinBase:"ta",tone:1},"玩":{pinyinBase:"wan",tone:2},"跟":{pinyinBase:"gen",tone:1},"喜":{pinyinBase:"xi",tone:3},"欢":{pinyinBase:"huan",tone:1},
+      "吃":{pinyinBase:"chi",tone:1},"很":{pinyinBase:"hen",tone:3},"什":{pinyinBase:"shen",tone:2},"么":{pinyinBase:"me",tone:0},"课":{pinyinBase:"ke",tone:4},
+      "看":{pinyinBase:"kan",tone:4},"书":{pinyinBase:"shu",tone:1},"老":{pinyinBase:"lao",tone:3},"师":{pinyinBase:"shi",tone:1},"为":{pinyinBase:"wei",tone:4},
+      "有":{pinyinBase:"you",tone:3},"没":{pinyinBase:"mei",tone:2},"外":{pinyinBase:"wai",tone:4},"因":{pinyinBase:"yin",tone:1},"雪":{pinyinBase:"xue",tone:3},
+      "说":{pinyinBase:"shuo",tone:1},"给":{pinyinBase:"gei",tone:3},"妈":{pinyinBase:"ma",tone:1},"爸":{pinyinBase:"ba",tone:4},"后":{pinyinBase:"hou",tone:4},
+      "前":{pinyinBase:"qian",tone:2},"对":{pinyinBase:"dui",tone:4},"学":{pinyinBase:"xue",tone:2},"校":{pinyinBase:"xiao",tone:4},"家":{pinyinBase:"jia",tone:1},
+      "到":{pinyinBase:"dao",tone:4},"回":{pinyinBase:"hui",tone:2},"放":{pinyinBase:"fang",tone:4},"怎":{pinyinBase:"zen",tone:3},"谁":{pinyinBase:"shui",tone:2},
+      "会":{pinyinBase:"hui",tone:4},"也":{pinyinBase:"ye",tone:3},"帮":{pinyinBase:"bang",tone:1},"能":{pinyinBase:"neng",tone:2},"每":{pinyinBase:"mei",tone:3},
+      "岁":{pinyinBase:"sui",tone:4},"时":{pinyinBase:"shi",tone:2},"候":{pinyinBase:"hou",tone:4},"快":{pinyinBase:"kuai",tone:4},"乐":{pinyinBase:"le",tone:4},
+      "高":{pinyinBase:"gao",tone:1},"兴":{pinyinBase:"xing",tone:4},
+
+      /* Grade 3 */
+      "姐":{pinyinBase:"jie",tone:3},"妹":{pinyinBase:"mei",tone:4},"长":{pinyinBase:"zhang",tone:3},"爱":{pinyinBase:"ai",tone:4},"想":{pinyinBase:"xiang",tone:3},
+      "样":{pinyinBase:"yang",tone:4},"都":{pinyinBase:"dou",tone:1},"哥":{pinyinBase:"ge",tone:1},"弟":{pinyinBase:"di",tone:4},"太":{pinyinBase:"tai",tone:4},
+      "两":{pinyinBase:"liang",tone:3},"和":{pinyinBase:"he",tone:2},"出":{pinyinBase:"chu",tone:1},"进":{pinyinBase:"jin",tone:4},"叫":{pinyinBase:"jiao",tone:4},
+      "再":{pinyinBase:"zai",tone:4},"见":{pinyinBase:"jian",tone:4},"国":{pinyinBase:"guo",tone:2},"中":{pinyinBase:"zhong",tone:1},"起":{pinyinBase:"qi",tone:3},
+      "美":{pinyinBase:"mei",tone:3},"写":{pinyinBase:"xie",tone:3},"用":{pinyinBase:"yong",tone:4},"多":{pinyinBase:"duo",tone:1},"谢":{pinyinBase:"xie",tone:4},
+      "点":{pinyinBase:"dian",tone:3},"东":{pinyinBase:"dong",tone:1},"西":{pinyinBase:"xi",tone:1},"少":{pinyinBase:"shao",tone:3},"边":{pinyinBase:"bian",tone:1},
+      "就":{pinyinBase:"jiu",tone:4},"如":{pinyinBase:"ru",tone:2},"还":{pinyinBase:"hai",tone:2},"果":{pinyinBase:"guo",tone:3},"所":{pinyinBase:"suo",tone:3},
+      "那":{pinyinBase:"na",tone:4},"地":{pinyinBase:"di",tone:4},"方":{pinyinBase:"fang",tone:1},"夏":{pinyinBase:"xia",tone:4},"热":{pinyinBase:"re",tone:4},
+      "阳":{pinyinBase:"yang",tone:2},"比":{pinyinBase:"bi",tone:3},"假":{pinyinBase:"jia",tone:3},"做":{pinyinBase:"zuo",tone:4},"过":{pinyinBase:"guo",tone:4},
+      "得":{pinyinBase:"de",tone:0},"送":{pinyinBase:"song",tone:4},"住":{pinyinBase:"zhu",tone:4},"饭":{pinyinBase:"fan",tone:4},"自":{pinyinBase:"zi",tone:4},
+      "己":{pinyinBase:"ji",tone:3},"奶":{pinyinBase:"nai",tone:3},"爷":{pinyinBase:"ye",tone:2},"房":{pinyinBase:"fang",tone:2},"加":{pinyinBase:"jia",tone:1},
+      "冷":{pinyinBase:"leng",tone:3},"秋":{pinyinBase:"qiu",tone:1},"等":{pinyinBase:"deng",tone:3},"于":{pinyinBase:"yu",tone:2},"喝":{pinyinBase:"he",tone:1},
+      "知":{pinyinBase:"zhi",tone:1},"道":{pinyinBase:"dao",tone:4},"早":{pinyinBase:"zao",tone:3},"午":{pinyinBase:"wu",tone:3},"晚":{pinyinBase:"wan",tone:3},
+      "着":{pinyinBase:"zhe",tone:0},"累":{pinyinBase:"lei",tone:4},"睡":{pinyinBase:"shui",tone:4},"觉":{pinyinBase:"jiao",tone:4},"床":{pinyinBase:"chuang",tone:2},
+      "画":{pinyinBase:"hua",tone:4},"红":{pinyinBase:"hong",tone:2},"白":{pinyinBase:"bai",tone:2},"云":{pinyinBase:"yun",tone:2},"把":{pinyinBase:"ba",tone:3},
+      "拿":{pinyinBase:"na",tone:2},"又":{pinyinBase:"you",tone:4},"色":{pinyinBase:"se",tone:4},"心":{pinyinBase:"xin",tone:1},
+
+      /* Grade 4 */
+      "买":{pinyinBase:"mai",tone:3},"钱":{pinyinBase:"qian",tone:2},"百":{pinyinBase:"bai",tone:3},"数":{pinyinBase:"shu",tone:4},"块":{pinyinBase:"kuai",tone:4},
+      "找":{pinyinBase:"zhao",tone:3},"真":{pinyinBase:"zhen",tone:1},"现":{pinyinBase:"xian",tone:4},"请":{pinyinBase:"qing",tone:3},"问":{pinyinBase:"wen",tone:4},
+      "从":{pinyinBase:"cong",tone:2},"远":{pinyinBase:"yuan",tone:3},"近":{pinyinBase:"jin",tone:4},"旁":{pinyinBase:"pang",tone:2},"公":{pinyinBase:"gong",tone:1},
+      "园":{pinyinBase:"yuan",tone:2},"只":{pinyinBase:"zhi",tone:[1,3]},"行":{pinyinBase:"xing",tone:2},"车":{pinyinBase:"che",tone:1},"飞":{pinyinBase:"fei",tone:1},
+      "机":{pinyinBase:"ji",tone:1},"跑":{pinyinBase:"pao",tone:3},"慢":{pinyinBase:"man",tone:4},"更":{pinyinBase:"geng",tone:4},"最":{pinyinBase:"zui",tone:4},
+      "球":{pinyinBase:"qiu",tone:2},"打":{pinyinBase:"da",tone:3},"次":{pinyinBase:"ci",tone:4},"分":{pinyinBase:"fen",tone:1},"当":{pinyinBase:"dang",tone:1},
+      "非":{pinyinBase:"fei",tone:1},"常":{pinyinBase:"chang",tone:2},"冬":{pinyinBase:"dong",tone:1},"第":{pinyinBase:"di",tone:4},"民":{pinyinBase:"min",tone:2},
+      "收":{pinyinBase:"shou",tone:1},"衣":{pinyinBase:"yi",tone:1},"服":{pinyinBase:"fu",tone:2},"河":{pinyinBase:"he",tone:2},"狗":{pinyinBase:"gou",tone:3},
+      "助":{pinyinBase:"zhu",tone:4},"网":{pinyinBase:"wang",tone:3},"它":{pinyinBase:"ta",tone:1},"春":{pinyinBase:"chun",tone:1},"节":{pinyinBase:"jie",tone:2},
+      "包":{pinyinBase:"bao",tone:1},"孩":{pinyinBase:"hai",tone:2},"新":{pinyinBase:"xin",tone:1},"门":{pinyinBase:"men",tone:2},"口":{pinyinBase:"kou",tone:3},
+      "穿":{pinyinBase:"chuan",tone:1},"举":{pinyinBase:"ju",tone:3},"听":{pinyinBase:"ting",tone:1},"话":{pinyinBase:"hua",tone:4},"忘":{pinyinBase:"wang",tone:4},
+      "记":{pinyinBase:"ji",tone:4},"答":{pinyinBase:"da",tone:2},"教":{pinyinBase:"jiao",tone:4},"级":{pinyinBase:"ji",tone:2},"手":{pinyinBase:"shou",tone:3},
+      "店":{pinyinBase:"dian",tone:4},"开":{pinyinBase:"kai",tone:1},"关":{pinyinBase:"guan",tone:1},"选":{pinyinBase:"xuan",tone:3},"别":{pinyinBase:"bie",tone:2},
+      "些":{pinyinBase:"xie",tone:1},"先":{pinyinBase:"xian",tone:1},"然":{pinyinBase:"ran",tone:2},"笑":{pinyinBase:"xiao",tone:4},"哭":{pinyinBase:"ku",tone:1},
+      "怕":{pinyinBase:"pa",tone:4},"黑":{pinyinBase:"hei",tone:1},"但":{pinyinBase:"dan",tone:4},"图":{pinyinBase:"tu",tone:2},"变":{pinyinBase:"bian",tone:4},
+      "成":{pinyinBase:"cheng",tone:2},"应":{pinyinBase:"ying",tone:1},"该":{pinyinBase:"gai",tone:1},"洗":{pinyinBase:"xi",tone:3},"头":{pinyinBase:"tou",tone:2},
+      "才":{pinyinBase:"cai",tone:2},"动":{pinyinBase:"dong",tone:4},"让":{pinyinBase:"rang",tone:4},"完":{pinyinBase:"wan",tone:2},"刚":{pinyinBase:"gang",tone:1}
+    };
+
+    // lexicon: 汉字 -> "pos. English"（保留词性信息）
+    const lexicon = {
+      /* Grade1 */
+      "一":"num. one","二":"num. two","三":"num. three","四":"num. four","五":"num. five",
+      "六":"num. six","七":"num. seven","八":"num. eight","九":"num. nine","十":"num. ten",
+      "上":"prep./adv. up; above","下":"prep./adv. down; below","大":"adj. big","小":"adj. small","不":"adv. not",
+      "坐":"v. sit","在":"prep. at; in","里":"prep. in; inside","山":"n. mountain","水":"n. water",
+      "火":"n. fire","人":"n. person","马":"n. horse","牛":"n. cow","羊":"n. sheep",
+      "鸟":"n. bird","虫":"n. insect","男":"n. male","女":"n. female","雨":"n. rain",
+      "土":"n. soil","月":"n. month; moon","天":"n. sky; day","日":"n. day; sun","生":"v./n. born; life",
+      "今":"adv. now","是":"v. is; are","明":"adj. bright; next (as in 明天)","昨":"n. yesterday","走":"v. walk",
+      "去":"v. go","来":"v. come","田":"n. field","星":"n. star","期":"n. period; week",
+      "几":"pron. how many","年":"n. year",
+
+      /* Grade2 */
+      "我":"pron. I; me","你":"pron. you","好":"adj. good","们":"suf. plural marker","可":"aux. can; may",
+      "以":"v./prep. to use; can","朋":"n. friend (part)","友":"n. friend","的":"part. possessive","哪":"pron. which",
+      "这":"pron. this","吗":"particle (question)","要":"v. want; need","面":"n. face; noodle","他":"pron. he",
+      "她":"pron. she","玩":"v. play","跟":"prep. with","喜":"v./n. like (part)","欢":"v./n. like (part)",
+      "吃":"v. eat","很":"adv. very","什":"pron. what (part)","么":"part. (what)","课":"n. class",
+      "看":"v. look; read","书":"n. book","老":"adj. old","师":"n. teacher (part)","为":"prep. for",
+      "有":"v. have","没":"adv. not have","外":"adj. outside","因":"prep. because","雪":"n. snow",
+      "说":"v. say","给":"v. give","妈":"n. mom","爸":"n. dad","后":"n. after; behind",
+      "前":"n. front; before","对":"adj./prep. correct; towards","学":"v. learn","校":"n. school","家":"n. home; family",
+      "到":"v. arrive","回":"v. return","放":"v. put","怎":"adv. how (part)","谁":"pron. who",
+      "会":"aux. can; meet","也":"adv. also","帮":"v. help","能":"aux. can","每":"adv. every",
+      "岁":"n. years (age)","时":"n. time","候":"n. time; moment","快":"adj. fast","乐":"adj./n. happy; music",
+      "高":"adj. tall; high","兴":"adj. happy",
+
+      /* Grade3 */
+      "姐":"n. older sister","妹":"n. younger sister","长":"adj. long; v. grow","爱":"v. love","想":"v. think; want",
+      "样":"n. type; manner","都":"adv. all","哥":"n. older brother","弟":"n. younger brother","太":"adv. too",
+      "两":"num. two (pair)","和":"conj. and","出":"v. go out","进":"v. enter","叫":"v. call",
+      "再":"adv. again","见":"v. see; meet","国":"n. country","中":"prep. in; middle","起":"v. get up; start",
+      "美":"adj. beautiful","写":"v. write","用":"v. use","多":"adj. many","谢":"v. thank",
+      "点":"n. dot; o'clock; a little","东":"n. east","西":"n. west","少":"adj. few","边":"n. side",
+      "就":"adv. then; right away","如":"conj. if; like","还":"adv. still; return","果":"n. fruit","所":"n. place",
+      "那":"pron. that","地":"part. (adverbial)","方":"n. direction; place","夏":"n. summer","热":"adj. hot",
+      "阳":"n. sun","比":"v. compare","假":"adj. fake; holiday","做":"v. do","过":"v./aux. pass; have done",
+      "得":"part. (complement)","送":"v. give; deliver","住":"v. live; stay","饭":"n. meal; rice","自":"pron. self",
+      "己":"pron. self","奶":"n. milk; grandma","爷":"n. grandpa","房":"n. house; room","加":"v. add",
+      "冷":"adj. cold","秋":"n. autumn","等":"v. wait","于":"prep. at; in","喝":"v. drink",
+      "知":"v. know","道":"n./v. way; know","早":"adj. early","午":"n. noon","晚":"adj. late",
+      "着":"part. aspect/particle","累":"adj. tired","睡":"v. sleep","觉":"n. sleep","床":"n. bed",
+      "画":"v. draw","红":"adj. red","白":"adj. white","云":"n. cloud","把":"prep/verb marker",
+      "拿":"v. take","又":"adv. again","色":"n. color","心":"n. heart; mind",
+
+      /* Grade4 */
+      "买":"v. buy","钱":"n. money","百":"num. hundred","数":"v. count; number","块":"m. piece; measure word",
+      "找":"v. find","真":"adj. real; true","现":"v. appear; present","请":"v./polite please","问":"v. ask",
+      "从":"prep. from","远":"adj. far","近":"adj. near","旁":"n. beside","公":"adj. public",
+      "园":"n. park; garden","只":"adv./m. only; measure","行":"v./n. walk; line","车":"n. vehicle","飞":"v. fly",
+      "机":"n. machine","跑":"v. run","慢":"adj. slow","更":"adv. more","最":"adv. most",
+      "球":"n. ball","打":"v. hit","次":"n. time; occurrence","分":"v./n. divide; minute","当":"v. act as; ought to",
+      "非":"adv. not; very","常":"adv. very","冬":"n. winter","第":"pref. ordinal","民":"n. people",
+      "收":"v. receive","衣":"n. clothes","服":"n. clothes","河":"n. river","狗":"n. dog",
+      "助":"v. help","网":"n. net; web","它":"pron. it","春":"n. spring","节":"n. festival",
+      "包":"n. bag","孩":"n. child","新":"adj. new","门":"n. door","口":"n. mouth",
+      "穿":"v. wear","举":"v. lift; raise","听":"v. listen","话":"n. speech; words","忘":"v. forget",
+      "记":"v. remember; record","答":"v. answer","教":"v. teach","级":"n. grade; level","手":"n. hand",
+      "店":"n. shop","开":"v. open","关":"v. close","选":"v. choose","别":"adj. other; don't",
+      "些":"pron. some","先":"adv. first","然":"adv. then","笑":"v. laugh","哭":"v. cry",
+      "怕":"v. fear","黑":"adj. black","但":"conj. but","图":"n. picture; map","变":"v. change",
+      "成":"v. become","应":"v. should","该":"aux. ought to","洗":"v. wash","头":"n. head",
+      "才":"adv. just; only","动":"v. move","让":"v. let; allow","完":"adj. finished","刚":"adv. just"
+    };
+
+    /*************************************************************************
+     * char->stroke gif 编码映射（来自你给出的清单）
+     * （注意：这里我把你提供的编码一一做成对象映射，确保每个汉字可以定位到对应 gif）
+     *************************************************************************/
+    const charCodeMap = {
+      "一":19968,"二":20108,"三":19977,"四":22235,"五":20116,"六":20845,"七":19971,"八":20843,"九":20061,"十":21313,
+      "上":19978,"下":19979,"大":22823,"小":23567,"不":19981,"坐":22352,"在":22312,"里":37324,"山":23665,"水":27700,
+      "火":28779,"人":20154,"马":39532,"牛":29275,"羊":32650,"鸟":40479,"虫":34411,"男":30007,"女":22899,"雨":38632,
+      "土":22303,"月":26376,"天":22825,"日":26085,"生":29983,"今":20170,"是":26159,"明":26126,"昨":26152,"走":36208,
+      "去":21435,"来":26469,"田":30000,"星":26143,"期":26399,"几":20960,"年":24180,"我":25105,"你":20320,"好":22909,
+      "们":20204,"可":21487,"以":20197,"朋":26379,"友":21451,"的":30340,"哪":21738,"这":36825,"吗":21527,"要":35201,
+      "面":38754,"他":20182,"她":22905,"玩":29609,"跟":36319,"喜":21916,"欢":27426,"吃":21507,"很":24456,"什":20160,
+      "么":20040,"课":35838,"看":30475,"书":20070,"老":32769,"师":24072,"为":20026,"有":26377,"没":27809,"外":22806,
+      "因":22240,"雪":38634,"说":35828,"给":32473,"妈":22920,"爸":29240,"后":21518,"前":21069,"对":23545,"学":23398,
+      "校":26657,"家":23478,"到":21040,"回":22238,"放":25918,"怎":24590,"谁":35841,"会":20250,"也":20063,"帮":24110,
+      "能":33021,"每":27599,"岁":23681,"时":26102,"候":20505,"快":24555,"乐":20048,"高":39640,"兴":20852,"姐":22992,
+      "妹":22969,"长":38271,"爱":29233,"想":24819,"样":26679,"都":37117,"哥":21733,"弟":24351,"太":22826,"两":20004,
+      "和":21644,"出":20986,"进":36827,"叫":21483,"再":20877,"见":35265,"国":22269,"中":20013,"起":36215,"美":32654,
+      "写":20889,"用":29992,"多":22810,"谢":35874,"点":28857,"东":19996,"西":35199,"少":23569,"边":36793,"就":23601,
+      "如":22914,"还":36824,"果":26524,"所":25152,"那":37027,"地":22320,"方":26041,"夏":22799,"热":28909,"阳":38451,
+      "比":27604,"假":20551,"做":20570,"过":36807,"得":24471,"送":36865,"住":20303,"饭":39277,"自":33258,"己":24049,
+      "奶":22902,"爷":29239,"房":25151,"加":21152,"冷":20919,"秋":31179,"等":31561,"于":20110,"喝":21917,"知":30693,
+      "道":36947,"早":26089,"午":21320,"晚":26202,"着":30528,"累":32047,"睡":30561,"觉":35273,"床":24202,"画":30011,
+      "红":32418,"白":30333,"云":20113,"把":25226,"拿":25343,"又":21448,"色":33394,"心":24515,"买":20080,"钱":38065,
+      "百":30334,"数":25968,"块":22359,"找":25214,"真":30495,"现":29616,"请":35831,"问":38382,"从":20174,"远":36828,
+      "近":36817,"旁":26049,"公":20844,"园":22253,"只":21482,"行":34892,"车":36710,"飞":39134,"机":26426,"跑":36305,
+      "慢":24930,"更":26356,"最":26368,"球":29699,"打":25171,"次":27425,"分":20998,"当":24403,"非":38750,"常":24120,
+      "冬":20908,"第":31532,"民":27665,"收":25910,"衣":34915,"服":26381,"河":27827,"狗":29399,"助":21161,"网":32593,
+      "它":23427,"春":26149,"节":33410,"包":21253,"孩":23401,"新":26032,"门":38376,"口":21475,"穿":31359,"举":20030,
+      "听":21548,"话":35805,"忘":24536,"记":35760,"答":31572,"教":25945,"级":32423,"手":25163,"店":24215,"开":24320,
+      "关":20851,"选":36873,"别":21035,"些":20123,"先":20808,"然":28982,"笑":31505,"哭":21741,"怕":24597,"黑":40657,
+      "但":20294,"图":22270,"变":21464,"成":25104,"应":24212,"该":35813,"洗":27927,"头":22836,"才":25165,"动":21160,
+      "让":35753,"完":23436,"刚":21018
+    };
+
+    /*************************************************************************
+     * 工具：拼音加音调（带 iu/ui 特殊规则）
+     *************************************************************************/
+    function markTone(syllable, tone) {
+      if (!tone || tone === 0) return syllable;
+      let s = syllable.replace(/v/g, "ü");
+      // tone maps
+      const toneMap = {
+        'a': ['ā','á','ǎ','à'],
+        'o': ['ō','ó','ǒ','ò'],
+        'e': ['ē','é','ě','è'],
+        'i': ['ī','í','ǐ','ì'],
+        'u': ['ū','ú','ǔ','ù'],
+        'ü': ['ǖ','ǘ','ǚ','ǜ']
+      };
+
+      // If contains 'iu' or 'ui' handle specially:
+      const lower = s.toLowerCase();
+      let targetIndex = -1;
+
+      if (lower.includes('iu')) {
+        // tone mark should be on 'u'
+        targetIndex = lower.indexOf('iu') + 1; // index of 'u'
+      } else if (lower.includes('ui')) {
+        // tone mark should be on 'i'
+        targetIndex = lower.indexOf('ui') + 0; // index of 'i'
+      } else {
+        // regular order a,o,e,i,u,ü
+        const order = ['a','o','e','i','u','ü'];
+        for (let ch of order) {
+          const idx = lower.indexOf(ch);
+          if (idx !== -1) { targetIndex = idx; break; }
+        }
+      }
+
+      if (targetIndex === -1) return s;
+      const ch = s[targetIndex];
+      const chLower = ch.toLowerCase();
+      const marks = toneMap[chLower];
+      if (!marks) return s;
+      const mark = marks[tone-1];
+      s = s.substring(0,targetIndex) + mark + s.substring(targetIndex+1);
+      return s;
+    }
+
+    /*************************************************************************
+     * 页面 DOM 与状态
+     *************************************************************************/
+    const gradeBtns = document.querySelectorAll(".grade-btn");
+    const numBtns = document.querySelectorAll(".num-btn");
+    const customInput = document.getElementById("custom-num");
+    const startBtn = document.getElementById("start-game");
+    const homeSection = document.getElementById("home");
+    const gameSection = document.getElementById("game");
+    const endSection = document.getElementById("end");
+    const gameGradeEl = document.getElementById("game-grade");
+    const qCountEl = document.getElementById("q-count");
+    const strokeGifEl = document.getElementById("stroke-gif");
+    const metaLineEl = document.getElementById("meta-line");
+    const playSoundBtn = document.getElementById("play-sound");
+    const choicesEl = document.getElementById("choices");
+    const nextBtn = document.getElementById("next-btn");
+    const quitBtn = document.getElementById("quit-btn");
+    const progressBar = document.getElementById("progress-bar");
+    const scoreText = document.getElementById("score-text");
+    const finalScoreEl = document.getElementById("final-score");
+    const toneGrid = document.getElementById("tone-grid");
+    const encourageEl = document.getElementById("encourage");
+    const retryBtn = document.getElementById("retry-btn");
+    const backHomeBtn = document.getElementById("back-home-btn");
+    const audioEl = document.getElementById("audio");
+
+    // 录音相关
+    const recBtn = document.getElementById("rec-btn");
+    const stopRecBtn = document.getElementById("stop-rec-btn");
+    const playRecBtn = document.getElementById("play-rec-btn");
+    const recStatus = document.getElementById("rec-status");
+    const userRecAudio = document.getElementById("user-rec-audio");
+
+    let mediaStream = null;
+    let mediaRecorder = null;
+    let recordedChunks = [];
+    // 存储 per-question 录音 blob （用题序 index 标记）
+    let userRecordings = {}; // key: questionIndex (cur), value: Blob URL
+
+    // state
+    let selectedGrade = 1;
+    let selectedNum = "all";
+    let customNum = null;
+    let pool = []; // objects {char,pinyinBase,tone}
+    let order = []; // indices into pool
+    let cur = 0;
+    let total = 0;
+    let score = 0;
+    let toneStats = {1:{total:0,correct:0},2:{total:0,correct:0},3:{total:0,correct:0},4:{total:0,correct:0}};
+    let toneWeights = {1:1,2:1,3:1,4:1};
+
+    // init selections
+    gradeBtns.forEach(btn=>{
+      btn.addEventListener("click", ()=> {
+        gradeBtns.forEach(b=>b.classList.remove("selected"));
+        btn.classList.add("selected");
+        selectedGrade = parseInt(btn.dataset.grade,10);
+      });
+    });
+    numBtns.forEach(btn=>{
+      btn.addEventListener("click", ()=> {
+        numBtns.forEach(b=>b.classList.remove("selected"));
+        btn.classList.add("selected");
+        selectedNum = btn.dataset.num;
+        customInput.value = ""; customNum = null;
+      });
+    });
+    customInput.addEventListener("input", ()=>{
+      const v = parseInt(customInput.value,10);
+      if (!isNaN(v) && v>0) {
+        numBtns.forEach(b=>b.classList.remove("selected"));
+        selectedNum = "custom";
+        customNum = v;
+      } else {
+        customNum = null;
+      }
+    });
+
+    // helper shuffle
+    function shuffleArray(a) {
+      const arr = a.slice();
+      for (let i=arr.length-1;i>0;i--){
+        const j = Math.floor(Math.random()*(i+1));
+        [arr[i],arr[j]] = [arr[j],arr[i]];
+      }
+      return arr;
+    }
+
+    // build pool
+    function buildPool(grade) {
+      const arr = gradeChars[grade] || [];
+      return arr.map(ch=>{
+        const info = pinyinMap[ch];
+        if (info) return {char:ch,pinyinBase:info.pinyinBase,tone:info.tone||0};
+        return {char:ch,pinyinBase:ch,tone:0};
+      });
+    }
+
+    // weighted shuffle: pick order with weights based on toneWeights
+    function generateOrderForPool(p) {
+      const w = p.map((item, idx) => {
+        const t = item.tone;
+        if (!t || t===0) return 0.3;
+        // if array, take avg weight
+        if (Array.isArray(t)) {
+          return t.reduce((s,tt)=>s + (toneWeights[tt]||1),0)/t.length;
+        }
+        return toneWeights[t] || 1;
+      });
+      const available = p.map((_,i)=>i);
+      const result = [];
+      while (available.length>0) {
+        const totalW = available.reduce((s,i)=>s + w[i],0);
+        if (totalW <= 0) {
+          const idx = Math.floor(Math.random()*available.length);
+          result.push(available.splice(idx,1)[0]);
+          continue;
+        }
+        let r = Math.random()*totalW;
+        let chosen = null;
+        for (const i of available) {
+          r -= w[i];
+          if (r <= 0) { chosen = i; break; }
+        }
+        if (chosen === null) chosen = available[available.length-1];
+        const pos = available.indexOf(chosen);
+        available.splice(pos,1);
+        result.push(chosen);
+      }
+      return result;
+    }
+
+    /*************************************************************************
+     * 开始游戏
+     *************************************************************************/
+    startBtn.addEventListener("click", ()=>{
+      pool = buildPool(selectedGrade);
+
+      let n = pool.length;
+      if (selectedNum === "10") n = Math.min(10, pool.length);
+      else if (selectedNum === "20") n = Math.min(20, pool.length);
+      else if (selectedNum === "all") n = pool.length;
+      else if (selectedNum === "custom" && customNum && customNum>0) n = Math.min(customNum, pool.length);
+
+      if (n < pool.length) {
+        pool = shuffleArray(pool).slice(0, n);
+      }
+
+      total = pool.length;
+      toneStats = {1:{total:0,correct:0},2:{total:0,correct:0},3:{total:0,correct:0},4:{total:0,correct:0}};
+      score = 0; cur = 0;
+      order = generateOrderForPool(pool);
+
+      document.getElementById("home").style.display = "none";
+      document.getElementById("game").style.display = "block";
+      document.getElementById("end").style.display = "none";
+      gameGradeEl.textContent = `年级 ${["","一年级","二年级","三年级","四年级"][selectedGrade] || selectedGrade}`;
+      qCountEl.textContent = `${cur+1} / ${total}`;
+      scoreText.textContent = `得分：${score}`;
+      progressBar.style.width = `0%`;
+
+      // clear recordings map for new round
+      userRecordings = {};
+      showQuestion(0);
+    });
+
+    function showQuestion(idxInOrder) {
+      const idx = order[idxInOrder];
+      const q = pool[idx];
+      // 显示笔顺 gif
+      const code = charCodeMap[q.char];
+      if (code) {
+        strokeGifEl.src = `https://www.strokeorder.com/assets/bishun/animation/${code}.gif`;
+        strokeGifEl.alt = `${q.char} Stroke Order Animation`;
+        strokeGifEl.title = `${q.char} 笔顺动画`;
+      } else {
+        strokeGifEl.src = "";
+        strokeGifEl.alt = q.char;
+        strokeGifEl.title = q.char;
+      }
+
+      // 显示释义（保留词性）
+      let lx = lexicon[q.char] || "（释义暂缺）";
+      metaLineEl.textContent = lx;
+
+      // build options 1-4
+      choicesEl.innerHTML = "";
+      for (let t=1; t<=4; t++){
+        const btn = document.createElement("button");
+        btn.className = "choice";
+        btn.textContent = markTone(q.pinyinBase, t);
+        btn.dataset.tone = t;
+        btn.addEventListener("click", ()=> handleChoice(btn, q));
+        choicesEl.appendChild(btn);
+      }
+
+      // update toneStats total opportunities:
+      // if q.tone is array, increment total for each tone possibility
+      if (Array.isArray(q.tone)) {
+        q.tone.forEach(tt => { if (toneStats[tt]) toneStats[tt].total++; });
+      } else {
+        if (q.tone && toneStats[q.tone]) toneStats[q.tone].total++;
+      }
+
+      // autoplay audio (archchinese)
+      playAudio(q.pinyinBase, Array.isArray(q.tone) ? (q.tone[0]||"") : q.tone);
+
+      // controls
+      nextBtn.style.display = "none";
+      qCountEl.textContent = `${cur+1} / ${total}`;
+      const p = Math.round((cur/Math.max(1,total))*100);
+      progressBar.style.width = p + "%";
+
+      // restore per-question recording UI if already recorded
+      const recKey = `${cur}`;
+      if (userRecordings[recKey]) {
+        playRecBtn.style.display = "inline-block";
+        userRecAudio.src = userRecordings[recKey];
+        userRecAudio.style.display = "inline-block";
+        recStatus.textContent = "（已录音）";
+      } else {
+        playRecBtn.style.display = "none";
+        userRecAudio.style.display = "none";
+        if (mediaRecorder && mediaRecorder.state === "recording") {
+          // nothing
+        } else {
+          recStatus.textContent = "（未录音）";
+        }
+        userRecAudio.src = "";
+      }
+    }
+
+    // 播放题干音：优先 ArchChinese: https://www.archchinese.com/swf/<pinyin><tone>.mp3
+    function playAudio(pinyinBase, tone) {
+      let url = "";
+      if (tone && tone > 0) {
+        url = `https://www.archchinese.com/swf/${pinyinBase}${tone}.mp3`;
+      } else {
+        url = `https://www.archchinese.com/swf/${pinyinBase}.mp3`;
+      }
+      audioEl.src = url;
+      audioEl.play().catch(()=>{/* silent */});
+    }
+
+    playSoundBtn.addEventListener("click", ()=>{
+      const idx = order[cur];
+      const q = pool[idx];
+      if (q) playAudio(q.pinyinBase, Array.isArray(q.tone) ? (q.tone[0]||"") : q.tone);
+    });
+
+    function handleChoice(btn, q) {
+      // disable all
+      document.querySelectorAll(".choice").forEach(b=>b.disabled=true);
+      const chosen = parseInt(btn.dataset.tone,10);
+
+      // check correctness (support multi-tone)
+      let correct = false;
+      if (Array.isArray(q.tone)) {
+        correct = q.tone.includes(chosen);
+      } else {
+        correct = (chosen === q.tone);
+      }
+
+      if (correct) {
+        btn.classList.add("correct");
+        score++;
+        // increase correct count for the chosen tone
+        if (toneStats[chosen]) toneStats[chosen].correct++;
+      } else {
+        btn.classList.add("wrong");
+        // highlight correct(s)
+        const correctTones = Array.isArray(q.tone) ? q.tone : [q.tone];
+        Array.from(document.querySelectorAll(".choice")).forEach(b=>{
+          const t = parseInt(b.dataset.tone,10);
+          if (correctTones.includes(t)) b.classList.add("correct");
+        });
+      }
+      scoreText.textContent = `得分：${score}`;
+      nextBtn.style.display = "inline-block";
+    }
+
+    nextBtn.addEventListener("click", ()=>{
+      cur++;
+      if (cur < total) {
+        showQuestion(cur);
+      } else {
+        finishRound();
+      }
+    });
+
+    quitBtn.addEventListener("click", finishRound);
+
+    function finishRound() {
+      document.getElementById("game").style.display = "none";
+      document.getElementById("end").style.display = "block";
+      finalScoreEl.textContent = `${score} / ${total}`;
+      toneGrid.innerHTML = "";
+      for (let t=1; t<=4; t++){
+        const st = toneStats[t];
+        const div = document.createElement("div");
+        div.className = "tone-item";
+        if (!st.total) {
+          div.textContent = `${t}声：0/0 (N/A)`;
+        } else {
+          const rate = Math.round((st.correct / st.total)*100);
+          div.textContent = `${t}声：${st.correct}/${st.total} (${rate}%)`;
+        }
+        toneGrid.appendChild(div);
+      }
+      const phrases = [
+        "你真棒！继续加油 💪",
+        "太棒了！再挑战一次吧 🌟",
+        "做好啦！继续保持好习惯 😊",
+        "很棒的进步，继续练就更棒！🎉",
+        "优秀！你的发音更进一步了！👏"
+      ];
+      encourageEl.textContent = phrases[Math.floor(Math.random()*phrases.length)];
+      adjustToneWeights();
+    }
+
+    function adjustToneWeights() {
+      for (let t=1; t<=4; t++){
+        const st = toneStats[t];
+        let acc = 1.0;
+        if (st.total > 0) acc = st.correct / st.total;
+        let newW = 0.5 + (1 - acc) * 2.5;
+        newW = Math.max(0.3, Math.min(newW, 4));
+        toneWeights[t] = newW;
+      }
+      const s = Object.values(toneWeights).reduce((a,b)=>a+b,0);
+      for (let t=1;t<=4;t++) toneWeights[t] = toneWeights[t]/s*4;
+    }
+
+    retryBtn.addEventListener("click", ()=>{
+      toneStats = {1:{total:0,correct:0},2:{total:0,correct:0},3:{total:0,correct:0},4:{total:0,correct:0}};
+      score = 0; cur = 0;
+      order = generateOrderForPool(pool);
+      document.getElementById("end").style.display = "none";
+      document.getElementById("game").style.display = "block";
+      gameGradeEl.textContent = `年级 ${["","一年级","二年级","三年级","四年级"][selectedGrade] || selectedGrade}`;
+      qCountEl.textContent = `${cur+1} / ${total}`;
+      scoreText.textContent = `得分：${score}`;
+      progressBar.style.width = `0%`;
+      showQuestion(0);
+    });
+
+    backHomeBtn.addEventListener("click", ()=>{
+      document.getElementById("end").style.display = "none";
+      document.getElementById("game").style.display = "none";
+      document.getElementById("home").style.display = "block";
+    });
+
+    // init defaults
+    document.querySelector('.grade-btn[data-grade="1"]').classList.add('selected');
+    document.querySelector('.num-btn[data-num="all"]').classList.add('selected');
+    selectedGrade = 1; selectedNum = "all";
+
+    // Keyboard: Enter to start
+    document.addEventListener("keydown",(e)=>{
+      if (e.key === "Enter" && document.getElementById("home").style.display !== "none") {
+        startBtn.click();
+      }
+    });
+
+    /*************************************************************************
+     * 录音功能（MediaRecorder）——尽量只请求一次权限，后续复用 stream
+     *************************************************************************/
+    async function ensureMediaStream() {
+      if (mediaStream) return mediaStream;
+      try {
+        mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        return mediaStream;
+      } catch (err) {
+        console.error("无法获取麦克风权限：", err);
+        alert("无法获取麦克风权限，请检查浏览器设置并允许麦克风访问。");
+        throw err;
+      }
+    }
+
+    recBtn.addEventListener("click", async ()=>{
+      try {
+        const stream = await ensureMediaStream();
+        recordedChunks = [];
+        mediaRecorder = new MediaRecorder(stream);
+        mediaRecorder.ondataavailable = function(e) {
+          if (e.data && e.data.size > 0) recordedChunks.push(e.data);
+        };
+        mediaRecorder.onstart = function() {
+          recStatus.textContent = "（正在录音...）";
+          recBtn.style.display = "none";
+          stopRecBtn.style.display = "inline-block";
+        };
+        mediaRecorder.onstop = function() {
+          const blob = new Blob(recordedChunks, { type: 'audio/webm' });
+          const url = URL.createObjectURL(blob);
+          // 存储到当前题目的录音（用 cur 作为 key）
+          const recKey = `${cur}`;
+          // 如果之前有，先 revoke
+          if (userRecordings[recKey]) {
+            try { URL.revokeObjectURL(userRecordings[recKey]); } catch(e){}
+          }
+          userRecordings[recKey] = url;
+          userRecAudio.src = url;
+          userRecAudio.style.display = "inline-block";
+          playRecBtn.style.display = "inline-block";
+          recStatus.textContent = "（已录音）";
+          recBtn.style.display = "inline-block";
+          stopRecBtn.style.display = "none";
+        };
+        mediaRecorder.start();
+      } catch (err) {
+        console.error("录音启动失败：", err);
+      }
+    });
+
+    stopRecBtn.addEventListener("click", ()=>{
+      if (mediaRecorder && mediaRecorder.state === "recording") {
+        mediaRecorder.stop();
+      }
+    });
+
+    playRecBtn.addEventListener("click", ()=>{
+      const recKey = `${cur}`;
+      if (userRecordings[recKey]) {
+        userRecAudio.play().catch(()=>{});
+      } else {
+        alert("当前题目尚未录音。");
+      }
+    });
+
+    // 页面卸载时 revoke blob urls
+    window.addEventListener("beforeunload", ()=>{
+      Object.values(userRecordings).forEach(url=>{
+        try { URL.revokeObjectURL(url); } catch(e){}
+      });
+    });
+
+  </script>
+</body>
+</html>
